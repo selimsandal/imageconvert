@@ -11,16 +11,14 @@ find_package(Qt6 COMPONENTS
         Core
         Gui
         Widgets
+        Network
         REQUIRED)
-
 
 if(WIN32)
     add_executable(imageconvert WIN32 main.cpp)
 else()
     add_executable(imageconvert MACOSX_BUNDLE main.cpp)
 endif()
-
-find_package(Qt6 REQUIRED COMPONENTS Network)
 
 target_link_libraries(imageconvert
         Qt::Core
