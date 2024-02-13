@@ -8,12 +8,14 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QFileDialog>
-#include <QImage>
+#include <QImageReader>
 #include <QImageWriter>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QFileInfo>
+#include <QCheckBox>
 
 class ImageConverter : public QWidget {
 public:
@@ -28,7 +30,7 @@ public:
         auto *formatLabel = new QLabel(tr("Select Format:"), this);
         mainLayout->addWidget(formatLabel);
 
-        formatCombo = new QComboBox(this); // Use member variable
+        formatCombo = new QComboBox(this);
         populateFormats(formatCombo);
         mainLayout->addWidget(formatCombo);
 
@@ -42,7 +44,7 @@ public:
         qualitySlider->setValue(100);
         qualityLayout->addWidget(qualitySlider);
 
-        qualitySpinBox = new QSpinBox(this); // Use member variable
+        qualitySpinBox = new QSpinBox(this);
         qualitySpinBox->setRange(0, 100);
         qualitySpinBox->setValue(100);
         qualityLayout->addWidget(qualitySpinBox);
@@ -51,6 +53,10 @@ public:
         connect(qualitySpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), qualitySlider, &QSlider::setValue);
 
         mainLayout->addLayout(qualityLayout);
+
+        // Save to the same location checkbox
+        saveToSameLocationCheckBox = new QCheckBox(tr("Save to the same location with the same name"), this);
+        mainLayout->addWidget(saveToSameLocationCheckBox);
 
         // Convert button
         auto *convertButton = new QPushButton(tr("Convert Image"), this);
@@ -62,8 +68,8 @@ public:
             convertImages(format, quality);
         });
 
-        auto *copyrightlabel = new QLabel(tr("Selim Sandal, 2024"), this);
-        mainLayout->addWidget(copyrightlabel, 0, Qt::AlignCenter);
+        auto *copyrightLabel = new QLabel(tr("Selim Sandal, 2024"), this);
+        mainLayout->addWidget(copyrightLabel, 0, Qt::AlignCenter);
         this->setWindowTitle(tr("Image Converter"));
     }
 
@@ -82,14 +88,15 @@ protected:
             int quality = qualitySpinBox->value();
             for (const QUrl &url : urlList) {
                 QString filePath = url.toLocalFile();
-                convertImage(filePath, format, quality);
+                convertImage(filePath, format, quality, saveToSameLocationCheckBox->isChecked());
             }
         }
     }
 
 private:
-    QComboBox *formatCombo; // Member variable for format combo box
-    QSpinBox *qualitySpinBox; // Member variable for quality spin box
+    QComboBox *formatCombo;
+    QSpinBox *qualitySpinBox;
+    QCheckBox *saveToSameLocationCheckBox;
 
     void populateFormats(QComboBox *formatCombo) {
         QList<QByteArray> formats = QImageWriter::supportedImageFormats();
@@ -99,28 +106,44 @@ private:
     }
 
     void convertImages(const QString &format, int quality) {
-        QStringList inputImagePaths = QFileDialog::getOpenFileNames(
-                this, tr("Open Images"), "", tr("Image Files (*.png *.jpg *.jpeg *.bmp *.gif)"),
-                nullptr, QFileDialog::Option::DontUseNativeDialog);
+        if (!saveToSameLocationCheckBox->isChecked()) {
+            QStringList inputImagePaths = QFileDialog::getOpenFileNames(
+                    this, tr("Open Images"), "", tr("Image Files (*.*)"),
+                    nullptr, QFileDialog::Option::DontUseNativeDialog);
 
-        for (const QString &inputImagePath : inputImagePaths) {
+            for (const QString &inputImagePath : inputImagePaths) {
+                convertImage(inputImagePath, format, quality, false);
+            }
+        } else {
+            QString inputImagePath = QFileDialog::getOpenFileName(
+                    this, tr("Open Image"), "", tr("Image Files (*.*)"),
+                    nullptr, QFileDialog::Option::DontUseNativeDialog);
             if (!inputImagePath.isEmpty()) {
-                convertImage(inputImagePath, format, quality);
+                convertImage(inputImagePath, format, quality, true);
             }
         }
     }
 
-    void convertImage(const QString &inputImagePath, const QString &format, int quality) {
+    void convertImage(const QString &inputImagePath, const QString &format, int quality, bool saveToSameLocation) {
         QImage image(inputImagePath);
         if (image.isNull()) {
             QMessageBox::critical(this, tr("Error"), tr("Could not load the image."));
             return;
         }
 
-        QString outputImagePath = QFileDialog::getSaveFileName(
-                this, tr("Save Image"), "", QString("%1 Files (*.%2)").arg(format, format.toLower()),
-                nullptr, QFileDialog::Option::DontUseNativeDialog);
-        if (outputImagePath.isEmpty()) return;
+        QString outputImagePath;
+        QFileInfo fileInfo(inputImagePath);  // Define fileInfo here, based on the inputImagePath
+
+        if (saveToSameLocation) {
+            outputImagePath = fileInfo.absoluteDir().absolutePath() + "/" + fileInfo.completeBaseName() + "." + format.toLower();
+        } else {
+            // Corrected use of fileInfo within the scope
+            outputImagePath = QFileDialog::getSaveFileName(
+                    this, tr("Save Image As"), fileInfo.absoluteDir().absolutePath() + "/" + fileInfo.completeBaseName() + "." + format.toLower(),
+                    QString("%1 Files (*.%2)").arg(format.toUpper(), format.toLower()),
+                    nullptr, QFileDialog::Option::DontUseNativeDialog);
+            if (outputImagePath.isEmpty()) return;
+        }
 
         QImageWriter writer(outputImagePath, format.toLatin1());
         writer.setQuality(quality);
@@ -129,17 +152,15 @@ private:
             return;
         }
 
-        QMessageBox::information(this, tr("Success"), tr("Image converted successfully."));
+        //QMessageBox::information(this, tr("Success"), tr("Image converted successfully."));
     }
+
 };
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-
-    QApplication::setApplicationVersion("beta 1");
-
+    QApplication::setApplicationVersion("1.0");
     ImageConverter converter;
     converter.show();
-
     return QApplication::exec();
 }
