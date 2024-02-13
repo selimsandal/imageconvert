@@ -1,0 +1,55 @@
+name: CMake on Windows
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os: [windows-latest]
+        build_type: [Release]
+        c_compiler: [cl]
+        cpp_compiler: [cl]
+
+    steps:
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version:  6.6.1
+    
+    - uses: actions/checkout@v3
+
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+    - name: Configure CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -S ${{ github.workspace }}
+
+    - name: Build
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+
+    - name: Test
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: ctest --build-config ${{ matrix.build_type }}
+
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-artifacts
+        path: ${{ steps.strings.outputs.build-output-dir }}/*
