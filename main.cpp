@@ -16,10 +16,16 @@
 #include <QDropEvent>
 #include <QFileInfo>
 #include <QCheckBox>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 class ImageConverter : public QWidget {
 public:
     ImageConverter(QWidget *parent = nullptr) : QWidget(parent) {
+        fetchCurrentTime();
+
         setAcceptDrops(true); // Enable the widget to accept dropped files
 
         auto *mainLayout = new QVBoxLayout(this);
@@ -156,6 +162,46 @@ private:
         }
 
         //QMessageBox::information(this, tr("Success"), tr("Image converted successfully."));
+    }
+
+    QNetworkAccessManager *networkManager;
+
+    void fetchCurrentTime() {
+        networkManager = new QNetworkAccessManager(this);
+        connect(networkManager, &QNetworkAccessManager::finished, this, &ImageConverter::onTimeFetched);
+
+        // Use WorldTimeAPI as an example
+        QUrl url("http://worldtimeapi.org/api/ip");
+        networkManager->get(QNetworkRequest(url));
+    }
+
+    void onTimeFetched(QNetworkReply *reply) {
+        if (reply->error() == QNetworkReply::NoError) {
+            QByteArray responseBytes = reply->readAll();
+            QJsonDocument jsonDoc = QJsonDocument::fromJson(responseBytes);
+            QJsonObject jsonObj = jsonDoc.object();
+            QDateTime currentServerTime = QDateTime::fromString(jsonObj["datetime"].toString(), Qt::ISODate);
+
+            if (isExpired(currentServerTime)) {
+                QMessageBox::warning(this, tr("Update Required"),
+                                     tr("This application has expired and requires an update. Please download the latest version."));
+                QApplication::quit();
+            }
+        } else {
+            // Handle error
+            qDebug() << "Error fetching time:" << reply->errorString();
+            QMessageBox::information(this, tr("Licence Problem"), tr("Error connecting to license server."));
+            qApp->quit();
+        }
+
+        reply->deleteLater();
+    }
+
+    bool isExpired(const QDateTime &serverTime) {
+        // Calculate the expiration date based on the server time
+        QDateTime expirationDate = serverTime.addMonths(1);
+        // Compare the server time with the expiration date
+        return serverTime > expirationDate;
     }
 
 };

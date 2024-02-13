@@ -20,10 +20,13 @@ else()
     add_executable(imageconvert MACOSX_BUNDLE main.cpp)
 endif()
 
+find_package(Qt6 REQUIRED COMPONENTS Network)
+
 target_link_libraries(imageconvert
         Qt::Core
         Qt::Gui
         Qt::Widgets
+        Qt6::Network
 )
 
 
