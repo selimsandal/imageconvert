@@ -93,6 +93,16 @@ protected:
         }
     }
 
+    void showEvent(QShowEvent *event) override {
+        if (isExpired()) {
+            QMessageBox::warning(this, tr("Update Required"),
+                                 tr("This application has expired and requires an update. Please download the latest version."));
+            QApplication::quit();
+        } else {
+            QWidget::showEvent(event);
+        }
+    }
+
 private:
     QComboBox *formatCombo;
     QSpinBox *qualitySpinBox;
@@ -127,6 +137,8 @@ private:
     }
 
 
+
+
     void convertImage(const QString &inputImagePath, const QString &format, int quality, bool saveToSameLocation) {
         QImage image(inputImagePath);
         if (image.isNull()) {
@@ -156,6 +168,13 @@ private:
         }
 
         //QMessageBox::information(this, tr("Success"), tr("Image converted successfully."));
+    }
+
+    bool isExpired() {
+        // Set the expiration date to one month from now
+        QDate expirationDate = QDate::currentDate().addMonths(1);
+        // Check if the current date is past the expiration date
+        return QDate::currentDate() > expirationDate;
     }
 
 };
