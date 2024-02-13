@@ -106,23 +106,26 @@ private:
     }
 
     void convertImages(const QString &format, int quality) {
+        QStringList inputImagePaths;
         if (!saveToSameLocationCheckBox->isChecked()) {
-            QStringList inputImagePaths = QFileDialog::getOpenFileNames(
+            // Allow selecting multiple files
+            inputImagePaths = QFileDialog::getOpenFileNames(
                     this, tr("Open Images"), "", tr("Image Files (*.*)"),
                     nullptr, QFileDialog::Option::DontUseNativeDialog);
-
-            for (const QString &inputImagePath : inputImagePaths) {
-                convertImage(inputImagePath, format, quality, false);
-            }
         } else {
-            QString inputImagePath = QFileDialog::getOpenFileName(
+            // Allow selecting multiple files even when "Save to the same location" is checked
+            inputImagePaths = QFileDialog::getOpenFileNames(
                     this, tr("Open Image"), "", tr("Image Files (*.*)"),
                     nullptr, QFileDialog::Option::DontUseNativeDialog);
+        }
+
+        for (const QString &inputImagePath : inputImagePaths) {
             if (!inputImagePath.isEmpty()) {
-                convertImage(inputImagePath, format, quality, true);
+                convertImage(inputImagePath, format, quality, saveToSameLocationCheckBox->isChecked());
             }
         }
     }
+
 
     void convertImage(const QString &inputImagePath, const QString &format, int quality, bool saveToSameLocation) {
         QImage image(inputImagePath);
