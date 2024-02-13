@@ -13,10 +13,17 @@ find_package(Qt6 COMPONENTS
         Widgets
         REQUIRED)
 
-add_executable(imageconvert main.cpp)
+
+if(WIN32)
+    add_executable(imageconvert WIN32 main.cpp)
+else()
+    add_executable(imageconvert MACOSX_BUNDLE main.cpp)
+endif()
+
 target_link_libraries(imageconvert
         Qt::Core
         Qt::Gui
         Qt::Widgets
 )
+
 

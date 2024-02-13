@@ -11,21 +11,24 @@
 #include <QImage>
 #include <QImageWriter>
 #include <QMessageBox>
-#include <QTranslator>
-#include <QLocale>
+#include <QMimeData>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 
 class ImageConverter : public QWidget {
 public:
     ImageConverter(QWidget *parent = nullptr) : QWidget(parent) {
+        setAcceptDrops(true); // Enable the widget to accept dropped files
+
         auto *mainLayout = new QVBoxLayout(this);
-        mainLayout->setContentsMargins(5, 5, 5, 5); // Reduce window border margins
-        mainLayout->setSpacing(5); // Reduce spacing between widgets
+        mainLayout->setContentsMargins(5, 5, 5, 5);
+        mainLayout->setSpacing(5);
 
         // Format selector
         auto *formatLabel = new QLabel(tr("Select Format:"), this);
         mainLayout->addWidget(formatLabel);
 
-        auto *formatCombo = new QComboBox(this);
+        formatCombo = new QComboBox(this); // Use member variable
         populateFormats(formatCombo);
         mainLayout->addWidget(formatCombo);
 
@@ -39,34 +42,55 @@ public:
         qualitySlider->setValue(100);
         qualityLayout->addWidget(qualitySlider);
 
-        auto *qualitySpinBox = new QSpinBox(this);
+        qualitySpinBox = new QSpinBox(this); // Use member variable
         qualitySpinBox->setRange(0, 100);
         qualitySpinBox->setValue(100);
         qualityLayout->addWidget(qualitySpinBox);
 
-        // Sync slider and spinbox
         connect(qualitySlider, &QSlider::valueChanged, qualitySpinBox, &QSpinBox::setValue);
         connect(qualitySpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), qualitySlider, &QSlider::setValue);
 
-        mainLayout->addLayout(qualityLayout); // Add the horizontal layout to the main vertical layout
+        mainLayout->addLayout(qualityLayout);
 
         // Convert button
         auto *convertButton = new QPushButton(tr("Convert Image"), this);
         mainLayout->addWidget(convertButton);
 
-        // Connect convert button click signal to the slot
-        connect(convertButton, &QPushButton::clicked, this, [this, formatCombo, qualitySpinBox]() {
+        connect(convertButton, &QPushButton::clicked, this, [this]() {
             QString format = formatCombo->currentData().toString();
             int quality = qualitySpinBox->value();
-            convertImage(format, quality);
+            convertImages(format, quality);
         });
 
         auto *copyrightlabel = new QLabel(tr("Selim Sandal, 2024"), this);
-        mainLayout->addWidget(copyrightlabel,0 , Qt::AlignCenter);
-        this->setWindowTitle("Image Convert");
+        mainLayout->addWidget(copyrightlabel, 0, Qt::AlignCenter);
+        this->setWindowTitle(tr("Image Converter"));
+    }
+
+protected:
+    void dragEnterEvent(QDragEnterEvent *event) override {
+        if (event->mimeData()->hasUrls()) {
+            event->acceptProposedAction();
+        }
+    }
+
+    void dropEvent(QDropEvent *event) override {
+        const QMimeData *mimeData = event->mimeData();
+        if (mimeData->hasUrls()) {
+            QList<QUrl> urlList = mimeData->urls();
+            QString format = formatCombo->currentData().toString();
+            int quality = qualitySpinBox->value();
+            for (const QUrl &url : urlList) {
+                QString filePath = url.toLocalFile();
+                convertImage(filePath, format, quality);
+            }
+        }
     }
 
 private:
+    QComboBox *formatCombo; // Member variable for format combo box
+    QSpinBox *qualitySpinBox; // Member variable for quality spin box
+
     void populateFormats(QComboBox *formatCombo) {
         QList<QByteArray> formats = QImageWriter::supportedImageFormats();
         for (const QByteArray &format : formats) {
@@ -74,17 +98,28 @@ private:
         }
     }
 
-    void convertImage(const QString &format, int quality) {
-        QString inputImagePath = QFileDialog::getOpenFileName(this, tr("Open Image"), "", tr("Image Files (*.*)"));
-        if (inputImagePath.isEmpty()) return;
+    void convertImages(const QString &format, int quality) {
+        QStringList inputImagePaths = QFileDialog::getOpenFileNames(
+                this, tr("Open Images"), "", tr("Image Files (*.png *.jpg *.jpeg *.bmp *.gif)"),
+                nullptr, QFileDialog::Option::DontUseNativeDialog);
 
+        for (const QString &inputImagePath : inputImagePaths) {
+            if (!inputImagePath.isEmpty()) {
+                convertImage(inputImagePath, format, quality);
+            }
+        }
+    }
+
+    void convertImage(const QString &inputImagePath, const QString &format, int quality) {
         QImage image(inputImagePath);
         if (image.isNull()) {
             QMessageBox::critical(this, tr("Error"), tr("Could not load the image."));
             return;
         }
 
-        QString outputImagePath = QFileDialog::getSaveFileName(this, tr("Save Image"), "", QString("%1 Files (*.%2)").arg(format, format.toLower()));
+        QString outputImagePath = QFileDialog::getSaveFileName(
+                this, tr("Save Image"), "", QString("%1 Files (*.%2)").arg(format, format.toLower()),
+                nullptr, QFileDialog::Option::DontUseNativeDialog);
         if (outputImagePath.isEmpty()) return;
 
         QImageWriter writer(outputImagePath, format.toLatin1());
