@@ -12,6 +12,8 @@ find_package(Qt6 COMPONENTS
         Gui
         Widgets
         Network
+        Qml
+        QuickControls2
         REQUIRED)
 
 if(WIN32)
@@ -25,6 +27,8 @@ target_link_libraries(imageconvert
         Qt::Gui
         Qt::Widgets
         Qt6::Network
+        Qt::Qml
+        Qt::QuickControls2
 )
 
 

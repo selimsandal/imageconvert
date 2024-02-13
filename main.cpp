@@ -20,6 +20,11 @@
 #include <QNetworkReply>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSettings>
+#include <QStyleFactory>
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QQuickStyle>
 
 class ImageConverter : public QWidget {
 public:
@@ -198,8 +203,8 @@ private:
     }
 
     bool isExpired(const QDateTime &serverTime) {
+        QDateTime expirationDate(QDate(2024,  2,  28), QTime(0,  0,  0));
         // Calculate the expiration date based on the server time
-        QDateTime expirationDate = serverTime.addMonths(1);
         // Compare the server time with the expiration date
         return serverTime > expirationDate;
     }
@@ -208,7 +213,11 @@ private:
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-    QApplication::setApplicationVersion("1.0");
+#ifdef Q_OS_WIN
+    QApplication::setStyle("fusion");
+#endif
+
+    QApplication::setApplicationVersion("beta 2");
     ImageConverter converter;
     converter.show();
     return QApplication::exec();
