@@ -17,9 +17,15 @@ find_package(Qt6 COMPONENTS
         REQUIRED)
 
 if(WIN32)
-    add_executable(imageconvert WIN32 main.cpp)
+    add_executable(imageconvert WIN32 main.cpp
+            DropIndicator.cpp
+            DropIndicator.h
+    )
 else()
-    add_executable(imageconvert MACOSX_BUNDLE main.cpp)
+    add_executable(imageconvert MACOSX_BUNDLE main.cpp
+            DropIndicator.cpp
+            DropIndicator.h
+    )
 endif()
 
 target_link_libraries(imageconvert

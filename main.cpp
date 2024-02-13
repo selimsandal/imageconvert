@@ -25,6 +25,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
+#include "DropIndicator.h"
 
 class ImageConverter : public QWidget {
 public:
@@ -65,23 +66,44 @@ public:
 
         mainLayout->addLayout(qualityLayout);
 
-        // Save to the same location checkbox
-        saveToSameLocationCheckBox = new QCheckBox(tr("Save to the same location with the same name"), this);
-        mainLayout->addWidget(saveToSameLocationCheckBox);
 
-        // Convert button
+        // Within the ImageConverter constructor
+
+// Create a vertical layout for the button and the checkbox
+        auto *buttonCheckboxLayout = new QVBoxLayout();
+
+// Convert button
         auto *convertButton = new QPushButton(tr("Convert Image"), this);
-        mainLayout->addWidget(convertButton);
+        buttonCheckboxLayout->addWidget(convertButton); // Add the convert button to the vertical layout
 
+// Checkbox (tick) under the button
+        auto *saveToSameLocationCheckBox = new QCheckBox(tr("Save to the same location with the same name"), this);
+        buttonCheckboxLayout->addWidget(saveToSameLocationCheckBox); // Add the checkbox under the button
+
+// Create a horizontal layout to include the button/checkbox layout and the drop indicator
+        auto *buttonIndicatorLayout = new QHBoxLayout();
+        buttonIndicatorLayout->addLayout(buttonCheckboxLayout); // Add the vertical layout to the horizontal layout
+
+// Drop indicator
+        auto *dropIndicator = new DropIndicator(this);
+        buttonIndicatorLayout->addWidget(dropIndicator); // Add the drop indicator to the horizontal layout
+
+// Add the horizontal layout to the main layout
+        mainLayout->addLayout(buttonIndicatorLayout); // Add the combined layout to the main layout
+
+// Connect the convert button click signal to the slot
         connect(convertButton, &QPushButton::clicked, this, [this]() {
             QString format = formatCombo->currentData().toString();
             int quality = qualitySpinBox->value();
             convertImages(format, quality);
         });
 
+
         auto *copyrightLabel = new QLabel(tr("Selim Sandal, 2024"), this);
         mainLayout->addWidget(copyrightLabel, 0, Qt::AlignCenter);
         this->setWindowTitle(tr("Image Converter"));
+
+
     }
 
 protected:
