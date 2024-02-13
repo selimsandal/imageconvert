@@ -27,7 +27,7 @@ public:
         mainLayout->setSpacing(5);
 
         // Format selector
-        auto *formatLabel = new QLabel(tr("Select Format:"), this);
+        auto *formatLabel = new QLabel(tr("Select Output Format:"), this);
         mainLayout->addWidget(formatLabel);
 
         formatCombo = new QComboBox(this);
