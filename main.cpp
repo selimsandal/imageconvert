@@ -30,80 +30,10 @@
 class ImageConverter : public QWidget {
 public:
     ImageConverter(QWidget *parent = nullptr) : QWidget(parent) {
+        setAcceptDrops(true);
+        QVBoxLayout *mainLayout = new QVBoxLayout(this);
+        setupUI(mainLayout);
         fetchCurrentTime();
-
-        setAcceptDrops(true); // Enable the widget to accept dropped files
-
-        auto *mainLayout = new QVBoxLayout(this);
-        mainLayout->setContentsMargins(5, 5, 5, 5);
-        mainLayout->setSpacing(5);
-
-        // Format selector
-        auto *formatLabel = new QLabel(tr("Select Output Format:"), this);
-        mainLayout->addWidget(formatLabel);
-
-        formatCombo = new QComboBox(this);
-        populateFormats(formatCombo);
-        mainLayout->addWidget(formatCombo);
-
-        // Quality slider and spinbox in a horizontal layout
-        auto *qualityLayout = new QHBoxLayout();
-        auto *qualityLabel = new QLabel(tr("Select Output Quality (0-100):"), this);
-        qualityLayout->addWidget(qualityLabel);
-
-        auto *qualitySlider = new QSlider(Qt::Horizontal, this);
-        qualitySlider->setRange(0, 100);
-        qualitySlider->setValue(100);
-        qualityLayout->addWidget(qualitySlider);
-
-        qualitySpinBox = new QSpinBox(this);
-        qualitySpinBox->setRange(0, 100);
-        qualitySpinBox->setValue(100);
-        qualityLayout->addWidget(qualitySpinBox);
-
-        connect(qualitySlider, &QSlider::valueChanged, qualitySpinBox, &QSpinBox::setValue);
-        connect(qualitySpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), qualitySlider, &QSlider::setValue);
-
-        mainLayout->addLayout(qualityLayout);
-
-
-        // Within the ImageConverter constructor
-
-// Create a vertical layout for the button and the checkbox
-        auto *buttonCheckboxLayout = new QVBoxLayout();
-
-// Convert button
-        auto *convertButton = new QPushButton(tr("Convert Image"), this);
-        buttonCheckboxLayout->addWidget(convertButton); // Add the convert button to the vertical layout
-
-// Checkbox (tick) under the button
-        auto *saveToSameLocationCheckBox = new QCheckBox(tr("Save to the same location with the same name"), this);
-        buttonCheckboxLayout->addWidget(saveToSameLocationCheckBox); // Add the checkbox under the button
-
-// Create a horizontal layout to include the button/checkbox layout and the drop indicator
-        auto *buttonIndicatorLayout = new QHBoxLayout();
-        buttonIndicatorLayout->addLayout(buttonCheckboxLayout); // Add the vertical layout to the horizontal layout
-
-// Drop indicator
-        auto *dropIndicator = new DropIndicator(this);
-        buttonIndicatorLayout->addWidget(dropIndicator); // Add the drop indicator to the horizontal layout
-
-// Add the horizontal layout to the main layout
-        mainLayout->addLayout(buttonIndicatorLayout); // Add the combined layout to the main layout
-
-// Connect the convert button click signal to the slot
-        connect(convertButton, &QPushButton::clicked, this, [this]() {
-            QString format = formatCombo->currentData().toString();
-            int quality = qualitySpinBox->value();
-            convertImages(format, quality);
-        });
-
-
-        auto *copyrightLabel = new QLabel(tr("Selim Sandal, 2024"), this);
-        mainLayout->addWidget(copyrightLabel, 0, Qt::AlignCenter);
-        this->setWindowTitle(tr("Image Converter"));
-
-
     }
 
 protected:
@@ -117,12 +47,7 @@ protected:
         const QMimeData *mimeData = event->mimeData();
         if (mimeData->hasUrls()) {
             QList<QUrl> urlList = mimeData->urls();
-            QString format = formatCombo->currentData().toString();
-            int quality = qualitySpinBox->value();
-            for (const QUrl &url : urlList) {
-                QString filePath = url.toLocalFile();
-                convertImage(filePath, format, quality, saveToSameLocationCheckBox->isChecked());
-            }
+            convertImages(urlList, formatCombo->currentData().toString(), qualitySpinBox->value(), saveToSameLocationCheckBox->isChecked());
         }
     }
 
@@ -130,76 +55,120 @@ private:
     QComboBox *formatCombo;
     QSpinBox *qualitySpinBox;
     QCheckBox *saveToSameLocationCheckBox;
+    QNetworkAccessManager *networkManager;
 
-    void populateFormats(QComboBox *formatCombo) {
+    void setupUI(QVBoxLayout *mainLayout) {
+        // Label for format selection
+        QLabel *formatLabel = new QLabel(tr("Select Output Format:"), this);
+        mainLayout->addWidget(formatLabel);
+
+        // Combo box for format selection
+        formatCombo = new QComboBox(this);
+        populateFormats(); // This function populates the combo box with available formats
+        mainLayout->addWidget(formatCombo);
+
+        // Quality selection components
+        QHBoxLayout *qualityLayout = new QHBoxLayout();
+        QLabel *qualityLabel = new QLabel(tr("Select Output Quality (0-100):"), this);
+        qualityLayout->addWidget(qualityLabel);
+
+        // Slider for quality
+        QSlider *qualitySlider = new QSlider(Qt::Horizontal, this);
+        qualitySlider->setRange(0, 100);
+        qualitySlider->setValue(100); // Default value
+        qualityLayout->addWidget(qualitySlider);
+
+        // Spin box for quality
+        qualitySpinBox = new QSpinBox(this);
+        qualitySpinBox->setRange(0, 100);
+        qualitySpinBox->setValue(100); // Default value
+        qualityLayout->addWidget(qualitySpinBox);
+
+        // Sync slider and spin box values
+        connect(qualitySlider, &QSlider::valueChanged, qualitySpinBox, &QSpinBox::setValue);
+        connect(qualitySpinBox, QOverload<int>::of(&QSpinBox::valueChanged), qualitySlider, &QSlider::setValue);
+
+        // Add the quality controls layout to the main layout
+        mainLayout->addLayout(qualityLayout);
+
+        // Button and checkbox layout
+        QVBoxLayout *buttonCheckboxLayout = new QVBoxLayout();
+
+        // Convert button
+        QPushButton *convertButton = new QPushButton(tr("Convert Image"), this);
+        buttonCheckboxLayout->addWidget(convertButton);
+
+        // Checkbox for saving to the same location
+        saveToSameLocationCheckBox = new QCheckBox(tr("Save to the same location"), this);
+        buttonCheckboxLayout->addWidget(saveToSameLocationCheckBox);
+
+        // Horizontal layout to hold the button/checkbox layout and the drop indicator
+        QHBoxLayout *buttonIndicatorLayout = new QHBoxLayout();
+        buttonIndicatorLayout->addLayout(buttonCheckboxLayout);
+
+        // Drop indicator component
+        DropIndicator *dropIndicator = new DropIndicator(this);
+        buttonIndicatorLayout->addWidget(dropIndicator);
+
+        // Add the button and drop indicator layout to the main layout
+        mainLayout->addLayout(buttonIndicatorLayout);
+
+        // Connect the convert button signal to the appropriate slot
+        connect(convertButton, &QPushButton::clicked, this, &ImageConverter::onConvertButtonClicked);
+
+        // Copyright label
+        QLabel *copyrightLabel = new QLabel(tr("Selim Sandal, 2024"), this);
+        mainLayout->addWidget(copyrightLabel, 0, Qt::AlignCenter);
+
+        // Set the window title
+        this->setWindowTitle(tr("Image Converter"));
+    }
+
+
+    void populateFormats() {
         QList<QByteArray> formats = QImageWriter::supportedImageFormats();
         for (const QByteArray &format : formats) {
             formatCombo->addItem(QString::fromLatin1(format).toUpper(), QString::fromLatin1(format));
         }
     }
 
-    void convertImages(const QString &format, int quality) {
-        QStringList inputImagePaths;
-        if (!saveToSameLocationCheckBox->isChecked()) {
-            // Allow selecting multiple files
-            inputImagePaths = QFileDialog::getOpenFileNames(
-                    this, tr("Open Images"), "", tr("Image Files (*.*)"),
-                    nullptr, QFileDialog::Option::DontUseNativeDialog);
-        } else {
-            // Allow selecting multiple files even when "Save to the same location" is checked
-            inputImagePaths = QFileDialog::getOpenFileNames(
-                    this, tr("Open Image"), "", tr("Image Files (*.*)"),
-                    nullptr, QFileDialog::Option::DontUseNativeDialog);
-        }
+    void onConvertButtonClicked() {
+        QList<QUrl> files = QFileDialog::getOpenFileUrls(this, tr("Select Images"), QString(), tr("Images (*.png *.jpg *.jpeg *.bmp *.gif)"));
+        if (files.isEmpty()) return;
 
-        for (const QString &inputImagePath : inputImagePaths) {
-            if (!inputImagePath.isEmpty()) {
-                convertImage(inputImagePath, format, quality, saveToSameLocationCheckBox->isChecked());
+        convertImages(files, formatCombo->currentData().toString(), qualitySpinBox->value(), saveToSameLocationCheckBox->isChecked());
+    }
+
+    void convertImages(const QList<QUrl> &urls, const QString &format, int quality, bool saveToSameLocation) {
+        for (const QUrl &url : urls) {
+            QString filePath = url.toLocalFile();
+            QImage image(filePath);
+            if (image.isNull()) {
+                QMessageBox::critical(this, tr("Error"), tr("Could not load the image: %1").arg(filePath));
+                continue;
+            }
+
+            QString outputImagePath;
+            QFileInfo fileInfo(filePath);
+            if (saveToSameLocation) {
+                outputImagePath = fileInfo.absoluteDir().absolutePath() + "/" + fileInfo.completeBaseName() + "." + format.toLower();
+            } else {
+                outputImagePath = QFileDialog::getSaveFileName(this, tr("Save Image As"), fileInfo.absoluteFilePath(), QString("%1 Files (*.%2)").arg(format.toUpper(), format.toLower()));
+                if (outputImagePath.isEmpty()) continue;
+            }
+
+            QImageWriter writer(outputImagePath, format.toLatin1());
+            writer.setQuality(quality);
+            if (!writer.write(image)) {
+                QMessageBox::critical(this, tr("Error"), tr("Could not write the image to: %1").arg(outputImagePath));
             }
         }
     }
 
-
-    void convertImage(const QString &inputImagePath, const QString &format, int quality, bool saveToSameLocation) {
-        QImage image(inputImagePath);
-        if (image.isNull()) {
-            QMessageBox::critical(this, tr("Error"), tr("Could not load the image."));
-            return;
-        }
-
-        QString outputImagePath;
-        QFileInfo fileInfo(inputImagePath);  // Define fileInfo here, based on the inputImagePath
-
-        if (saveToSameLocation) {
-            outputImagePath = fileInfo.absoluteDir().absolutePath() + "/" + fileInfo.completeBaseName() + "." + format.toLower();
-        } else {
-            // Corrected use of fileInfo within the scope
-            outputImagePath = QFileDialog::getSaveFileName(
-                    this, tr("Save Image As"), fileInfo.absoluteDir().absolutePath() + "/" + fileInfo.completeBaseName() + "." + format.toLower(),
-                    QString("%1 Files (*.%2)").arg(format.toUpper(), format.toLower()),
-                    nullptr, QFileDialog::Option::DontUseNativeDialog);
-            if (outputImagePath.isEmpty()) return;
-        }
-
-        QImageWriter writer(outputImagePath, format.toLatin1());
-        writer.setQuality(quality);
-        if (!writer.write(image)) {
-            QMessageBox::critical(this, tr("Error"), tr("Could not write the image."));
-            return;
-        }
-
-        //QMessageBox::information(this, tr("Success"), tr("Image converted successfully."));
-    }
-
-    QNetworkAccessManager *networkManager;
-
     void fetchCurrentTime() {
         networkManager = new QNetworkAccessManager(this);
         connect(networkManager, &QNetworkAccessManager::finished, this, &ImageConverter::onTimeFetched);
-
-        // Use WorldTimeAPI as an example
-        QUrl url("http://worldtimeapi.org/api/ip");
-        networkManager->get(QNetworkRequest(url));
+        networkManager->get(QNetworkRequest(QUrl("http://worldtimeapi.org/api/ip")));
     }
 
     void onTimeFetched(QNetworkReply *reply) {
@@ -208,29 +177,21 @@ private:
             QJsonDocument jsonDoc = QJsonDocument::fromJson(responseBytes);
             QJsonObject jsonObj = jsonDoc.object();
             QDateTime currentServerTime = QDateTime::fromString(jsonObj["datetime"].toString(), Qt::ISODate);
-
-            if (isExpired(currentServerTime)) {
-                QMessageBox::warning(this, tr("Update Required"),
-                                     tr("This application has expired and requires an update. Please download the latest version."));
-                QApplication::quit();
-            }
+            checkExpiration(currentServerTime);
         } else {
-            // Handle error
-            qDebug() << "Error fetching time:" << reply->errorString();
-            QMessageBox::information(this, tr("Licence Problem"), tr("Error connecting to license server."));
+            QMessageBox::information(this, tr("License Problem"), tr("Error connecting to license server."));
             qApp->quit();
         }
-
         reply->deleteLater();
     }
 
-    bool isExpired(const QDateTime &serverTime) {
-        QDateTime expirationDate(QDate(2024,  2,  28), QTime(0,  0,  0));
-        // Calculate the expiration date based on the server time
-        // Compare the server time with the expiration date
-        return serverTime > expirationDate;
+    void checkExpiration(const QDateTime &serverTime) {
+        QDateTime expirationDate(QDate(2024, 2, 28), QTime(0, 0, 0));
+        if (serverTime > expirationDate) {
+            QMessageBox::warning(this, tr("Update Required"), tr("This application has expired and requires an update. Please download the latest version."));
+            QApplication::quit();
+        }
     }
-
 };
 
 int main(int argc, char *argv[]) {
@@ -238,7 +199,6 @@ int main(int argc, char *argv[]) {
 #ifdef Q_OS_WIN
     QApplication::setStyle("fusion");
 #endif
-
     QApplication::setApplicationVersion("beta 2");
     ImageConverter converter;
     converter.show();
