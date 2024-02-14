@@ -2,9 +2,9 @@ name: CMake on Windows, Linux, and macOS
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
@@ -30,7 +30,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
-          version:  6.*
+          version: 6.*
 
       - uses: actions/checkout@v3
 
