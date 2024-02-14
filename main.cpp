@@ -1,31 +1,31 @@
-#include <QApplication>
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QComboBox>
-#include <QSlider>
-#include <QSpinBox>
-#include <QLabel>
-#include <QPushButton>
-#include <QFileDialog>
-#include <QImageReader>
-#include <QImageWriter>
-#include <QMessageBox>
-#include <QMimeData>
-#include <QDragEnterEvent>
-#include <QDropEvent>
-#include <QFileInfo>
-#include <QCheckBox>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QSettings>
-#include <QStyleFactory>
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QQuickStyle>
-#include "DropIndicator.h"
+#import <QApplication>
+#import <QWidget>
+#import <QVBoxLayout>
+#import <QHBoxLayout>
+#import <QComboBox>
+#import <QSlider>
+#import <QSpinBox>
+#import <QLabel>
+#import <QPushButton>
+#import <QFileDialog>
+#import <QImageReader>
+#import <QImageWriter>
+#import <QMessageBox>
+#import <QMimeData>
+#import <QDragEnterEvent>
+#import <QDropEvent>
+#import <QFileInfo>
+#import <QCheckBox>
+#import <QNetworkAccessManager>
+#import <QNetworkReply>
+#import <QJsonDocument>
+#import <QJsonObject>
+#import <QSettings>
+#import <QStyleFactory>
+#import <QGuiApplication>
+#import <QQmlApplicationEngine>
+#import <QQuickStyle>
+#import "DropIndicator.h"
 
 class ImageConverter : public QWidget {
 public:
@@ -133,37 +133,61 @@ private:
     }
 
     void onConvertButtonClicked() {
-        QList<QUrl> files = QFileDialog::getOpenFileUrls(this, tr("Select Images"), QString(), tr("Images (*.png *.jpg *.jpeg *.bmp *.gif)"));
+        // Generate the filter string for supported image formats using QImageReader
+        QStringList formats;
+        for (const QByteArray &format : QImageReader::supportedImageFormats()) {
+            formats << QString("*.%1").arg(QString::fromLatin1(format).toLower());
+        }
+        QString filter = tr("Images (%1)").arg(formats.join(' '));
+
+        QList<QUrl> files = QFileDialog::getOpenFileUrls(
+                this,
+                tr("Select Images"),
+                QString(),
+                filter
+        );
+
         if (files.isEmpty()) return;
 
         convertImages(files, formatCombo->currentData().toString(), qualitySpinBox->value(), saveToSameLocationCheckBox->isChecked());
     }
 
+
     void convertImages(const QList<QUrl> &urls, const QString &format, int quality, bool saveToSameLocation) {
         for (const QUrl &url : urls) {
-            QString filePath = url.toLocalFile();
-            QImage image(filePath);
+            QString inputFilePath = url.toLocalFile();
+            QImage image(inputFilePath);
             if (image.isNull()) {
-                QMessageBox::critical(this, tr("Error"), tr("Could not load the image: %1").arg(filePath));
+                QMessageBox::critical(this, tr("Error"), tr("Could not load the image: %1").arg(inputFilePath));
                 continue;
             }
 
-            QString outputImagePath;
-            QFileInfo fileInfo(filePath);
+            QString outputFilePath;
+            QFileInfo fileInfo(inputFilePath);
             if (saveToSameLocation) {
-                outputImagePath = fileInfo.absoluteDir().absolutePath() + "/" + fileInfo.completeBaseName() + "." + format.toLower();
+                // Change the file extension to the selected format
+                outputFilePath = fileInfo.absoluteDir().absolutePath() + "/" + fileInfo.completeBaseName() + "." + format;
             } else {
-                outputImagePath = QFileDialog::getSaveFileName(this, tr("Save Image As"), fileInfo.absoluteFilePath(), QString("%1 Files (*.%2)").arg(format.toUpper(), format.toLower()));
-                if (outputImagePath.isEmpty()) continue;
+                // Suggest the new file name with the correct extension
+                QString suggestedFileName = fileInfo.absoluteDir().absolutePath() + "/" + fileInfo.completeBaseName() + "." + format;
+                // Use the selected format for the save dialog filter
+                QString filter = QString("%1 Files (*.%2)").arg(format.toUpper(), format);
+                outputFilePath = QFileDialog::getSaveFileName(this, tr("Save Image As"), suggestedFileName, filter);
+                if (outputFilePath.isEmpty()) continue;
+                // Append the correct file extension if not present
+                if (!outputFilePath.endsWith('.' + format, Qt::CaseInsensitive)) {
+                    outputFilePath += '.' + format;
+                }
             }
 
-            QImageWriter writer(outputImagePath, format.toLatin1());
+            QImageWriter writer(outputFilePath, format.toLatin1());
             writer.setQuality(quality);
             if (!writer.write(image)) {
-                QMessageBox::critical(this, tr("Error"), tr("Could not write the image to: %1").arg(outputImagePath));
+                QMessageBox::critical(this, tr("Error"), tr("Could not write the image to: %1").arg(outputFilePath));
             }
         }
     }
+
 
     void fetchCurrentTime() {
         networkManager = new QNetworkAccessManager(this);
