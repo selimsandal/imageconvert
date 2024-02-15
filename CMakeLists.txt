@@ -22,6 +22,12 @@ EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTUR
 message( STATUS "Architecture: ${ARCHITECTURE}" )
 ### end detect cpu arch
 
+### detect linux, cmake has no linux detection smh
+if(UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
+### end detect linux
+
 if(WIN32)
     add_executable(imageconvert WIN32 main.cpp
             DropIndicator.cpp
