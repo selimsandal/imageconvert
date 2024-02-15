@@ -22,12 +22,19 @@ EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTUR
 message( STATUS "Architecture: ${ARCHITECTURE}" )
 ### end detect cpu arch
 
-if(WIN32 OR LINUX)
+if(WIN32)
     add_executable(imageconvert WIN32 main.cpp
             DropIndicator.cpp
             DropIndicator.h
     )
 endif()
+
+if(LINUX)
+    add_executable(imageconvert main.cpp
+            DropIndicator.cpp
+            DropIndicator.h
+    )
+endif ()
 
 if(APPLE)
     add_executable(imageconvert MACOSX_BUNDLE main.cpp
