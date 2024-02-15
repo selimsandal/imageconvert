@@ -22,9 +22,8 @@ jobs:
             c_compiler: clang
             cpp_compiler: clang++
           - os: windows-latest
-            # Example change to MinGW
-            c_compiler: gcc
-            cpp_compiler: g++
+            c_compiler: clang
+            cpp_compiler: clang++
 
     steps:
       - uses: actions/checkout@v3
@@ -33,6 +32,14 @@ jobs:
         uses: jurplel/install-qt-action@v3.3.0
         with:
           version: 6.6.*
+
+      # Set up Clang for Windows
+      - name: Set up Clang (Windows only)
+        if: matrix.os == 'windows-latest'
+        uses: egor-tensin/setup-clang@v1
+        with:
+          version: latest
+          platform: x64
 
       - name: Set up environment variables
         run: |
@@ -52,7 +59,8 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           macdeployqt build/imageconvert.app -dmg
-        # Update artifact upload for macOS to only upload the .dmg
+
+      # Upload dmg as artifact (macOS only)
       - name: Upload dmg as artifact (macOS only)
         if: matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v2
@@ -60,7 +68,7 @@ jobs:
           name: application-dmg-${{ matrix.os }}
           path: build/*.dmg
 
-      # Update artifact upload step to exclude macOS as it's handled separately
+      # Upload build directory as artifact (excluding macOS)
       - name: Upload build directory as artifact (excluding macOS)
         if: matrix.os != 'macos-latest'
         uses: actions/upload-artifact@v2
