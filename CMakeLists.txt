@@ -8,14 +8,19 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 
-find_package(Qt6 COMPONENTS
+find_package(Qt6 REQUIRED COMPONENTS
         Core
         Gui
         Widgets
         Network
         Qml
         QuickControls2
-        REQUIRED)
+        )
+
+qt_standard_project_setup()
+
+
+
 
 ### detect cpu arch
 EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
@@ -23,7 +28,7 @@ message( STATUS "Architecture: ${ARCHITECTURE}" )
 ### end detect cpu arch
 
 if(WIN32)
-    add_executable(imageconvert WIN32 main.cpp
+    qt_add_executable(imageconvert WIN32 main.cpp
             DropIndicator.cpp
             DropIndicator.h
     )
@@ -31,14 +36,14 @@ endif()
 
 if(LINUX)
     message("running on linux")
-    add_executable(imageconvert main.cpp
+    qt_add_executable(imageconvert main.cpp
             DropIndicator.cpp
             DropIndicator.h
     )
 endif ()
 
 if(APPLE)
-    add_executable(imageconvert MACOSX_BUNDLE main.cpp
+    qt_add_executable(imageconvert MACOSX_BUNDLE main.cpp
             DropIndicator.cpp
             DropIndicator.h
     )
@@ -49,7 +54,7 @@ if(APPLE)
     endif ()
 endif()
 
-target_link_libraries(imageconvert
+target_link_libraries(imageconvert PRIVATE
         Qt::Core
         Qt::Gui
         Qt::Widgets
