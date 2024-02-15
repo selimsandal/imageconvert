@@ -22,8 +22,9 @@ jobs:
             c_compiler: clang
             cpp_compiler: clang++
           - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
+            # Example change to MinGW
+            c_compiler: gcc
+            cpp_compiler: g++
 
     steps:
       - uses: actions/checkout@v3
@@ -47,12 +48,21 @@ jobs:
         run: |
           windeployqt build/Release/imageconvert.exe
 
-      - name: Prepare deployment with macdeployqt (macOS only)
+      - name: Prepare deployment and create dmg with macdeployqt (macOS only)
         if: matrix.os == 'macos-latest'
         run: |
-          macdeployqt build/imageconvert.app
+          macdeployqt build/imageconvert.app -dmg
+        # Update artifact upload for macOS to only upload the .dmg
+      - name: Upload dmg as artifact (macOS only)
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: application-dmg-${{ matrix.os }}
+          path: build/*.dmg
 
-      - name: Upload build directory as artifact
+      # Update artifact upload step to exclude macOS as it's handled separately
+      - name: Upload build directory as artifact (excluding macOS)
+        if: matrix.os != 'macos-latest'
         uses: actions/upload-artifact@v2
         with:
           name: build-folder-${{ matrix.os }}
