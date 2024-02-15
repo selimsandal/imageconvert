@@ -37,7 +37,7 @@ if(WIN32)
             DropIndicator.h
     )
 
-    set_target_properties(WorkTracker PROPERTIES
+    set_target_properties(imageconvert PROPERTIES
             WIN32_EXECUTABLE ON
     )
 endif()
