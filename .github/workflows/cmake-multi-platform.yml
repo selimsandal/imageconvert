@@ -1,4 +1,4 @@
-name: CMake on Windows, Linux, and macOS
+name: Build with Makefile on Windows, Linux, and macOS
 
 on:
   push:
@@ -14,7 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        build_type: [Release]
         include:
           - os: ubuntu-latest
             c_compiler: gcc
@@ -27,42 +26,34 @@ jobs:
             cpp_compiler: cl
 
     steps:
+      - uses: actions/checkout@v3
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v3.3.0
         with:
           version: 6.6.*
 
-      - uses: actions/checkout@v3
-
-      - name: Set reusable strings
-        id: strings
-        shell: bash
+      - name: Set up environment variables
         run: |
-          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+          echo "CC=${{ matrix.c_compiler }}" >> $GITHUB_ENV
+          echo "CXX=${{ matrix.cpp_compiler }}" >> $GITHUB_ENV
 
-      - name: Configure CMake
-        run: >
-          cmake -B ${{ steps.strings.outputs.build-output-dir }}
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -S ${{ github.workspace }}
-
-      - name: Build
-        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
-
-      # Additional step for Windows to use windeployqt
+      - name: Run Makefile
+        run: |
+          make all
+          
       - name: Prepare deployment with windeployqt (Windows only)
         if: matrix.os == 'windows-latest'
         run: |
-          windeployqt ${{ steps.strings.outputs.build-output-dir }}/Release/imageconvert.exe
+          windeployqt build/Release/imageconvert.exe
 
-      - name: Test
-        working-directory: ${{ steps.strings.outputs.build-output-dir }}
-        run: ctest --build-config ${{ matrix.build_type }}
+      - name: Prepare deployment with macdeployqt (macOS only)
+        if: matrix.os == 'macos-latest'
+        run: |
+          macdeployqt build/imageconvert.app
 
-      - name: Archive production artifacts
+      - name: Upload build directory as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: build-artifacts-${{ matrix.os }}
-          path: ${{ steps.strings.outputs.build-output-dir }}/*
+          name: build-folder-${{ matrix.os }}
+          path: build/
