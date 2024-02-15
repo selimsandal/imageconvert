@@ -1,4 +1,3 @@
-// DropIndicator.h
 #ifndef DROPINDICATOR_H
 #define DROPINDICATOR_H
 
@@ -12,6 +11,9 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+
+private:
+    bool isDarkMode() const; // Add this line to declare the new method
 };
 
 #endif // DROPINDICATOR_H
