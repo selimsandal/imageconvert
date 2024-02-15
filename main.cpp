@@ -220,6 +220,7 @@ private:
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
+    QImageReader::setAllocationLimit(0);
 #ifdef Q_OS_WIN
     QApplication::setStyle("fusion");
 #endif
