@@ -51,6 +51,12 @@ jobs:
       - name: Build
         run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
+      # Additional step for Windows to use windeployqt
+      - name: Prepare deployment with windeployqt (Windows only)
+        if: matrix.os == 'windows-latest'
+        run: |
+          windeployqt ${{ steps.strings.outputs.build-output-dir }}/Release/imageconvert.exe
+
       - name: Test
         working-directory: ${{ steps.strings.outputs.build-output-dir }}
         run: ctest --build-config ${{ matrix.build_type }}
