@@ -15,12 +15,6 @@ jobs:
         with:
           version: 6.6.*
 
-      - name: Setup MSVC environment
-        shell: cmd
-        run: |
-          call "C:/Program Files/Microsoft Visual Studio/2022/BuildTools/VC/Auxiliary/Build/vcvars64.bat"
-          echo "##vso[task.prependpath]C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.29.30133\bin\Hostx64\x64"
-
       - name: Run Makefile
         shell: cmd
         run: |
