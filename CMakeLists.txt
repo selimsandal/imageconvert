@@ -17,16 +17,28 @@ find_package(Qt6 COMPONENTS
         QuickControls2
         REQUIRED)
 
+### detect cpu arch
+EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
+message( STATUS "Architecture: ${ARCHITECTURE}" )
+### end detect cpu arch
+
 if(WIN32)
     add_executable(imageconvert WIN32 main.cpp
             DropIndicator.cpp
             DropIndicator.h
     )
-else()
+endif()
+
+if(APPLE)
     add_executable(imageconvert MACOSX_BUNDLE main.cpp
             DropIndicator.cpp
             DropIndicator.h
     )
+
+    ### build universal binary if on x86_64 mac
+    if (${ARCHITECTURE} STREQUAL "x86_64")
+        set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+    endif ()
 endif()
 
 target_link_libraries(imageconvert
