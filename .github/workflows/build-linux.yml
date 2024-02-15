@@ -1,0 +1,27 @@
+name: Build on Linux
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies (if any)
+        run: sudo apt-get update && sudo apt-get install -y <your-dependencies>
+
+      - name: Run Makefile
+        run: make all
+
+      - name: Upload build directory as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-folder-linux
+          path: build/

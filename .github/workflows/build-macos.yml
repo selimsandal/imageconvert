@@ -1,0 +1,32 @@
+name: Build on macOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3.3.0
+        with:
+          version: 6.6.*
+
+      - name: Run Makefile
+        run: make all
+
+      - name: Prepare deployment and create dmg with macdeployqt
+        run: macdeployqt build/imageconvert.app -dmg
+
+      - name: Upload dmg as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: application-dmg-macos
+          path: build/*.dmg

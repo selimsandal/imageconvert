@@ -1,0 +1,32 @@
+name: Build on Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3.3.0
+        with:
+          version: 6.6.*
+
+      - name: Run Makefile
+        run: make all
+          
+      - name: Prepare deployment with windeployqt
+        run: windeployqt build/Release/imageconvert.exe
+
+      - name: Upload build directory as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-folder-windows
+          path: build/
