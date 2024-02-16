@@ -4,6 +4,7 @@ CONFIG += c++26
 
 TARGET = imageconvert
 QMAKE_TARGET_BUNDLE_PREFIX = com.selimsandal
+QMAKE_INFO_PLIST = Info.plist
 
 VERSION=0.0.3
 
