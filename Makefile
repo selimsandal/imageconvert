@@ -11,3 +11,8 @@ build_project:
 clean:
 	@echo "Cleaning up..."
 	@rm -rf build
+	@rm -rf xcode-proj
+
+xcode:
+	@echo "Creating Xcode project..."
+	@mkdir -p xcode-proj && cd xcode-proj && qmake -spec macx-xcode ../ && open *.xcodeproj

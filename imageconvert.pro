@@ -4,6 +4,11 @@ CONFIG += c++26
 
 TARGET = imageconvert
 
+VERSION=0.0.3
+
+SHORT_VERSION = 0.0.3
+FULL_VERSION = 0.0.3
+
 # Define sources and headers
 SOURCES += \
         src/main.cpp \
@@ -11,3 +16,6 @@ SOURCES += \
 
 HEADERS += \
         src/DropIndicator.h
+
+ICON = xcode.icns
+QMAKE_INFO_PLIST = Info.plist

@@ -224,7 +224,7 @@ int main(int argc, char *argv[]) {
 #ifdef Q_OS_WIN
     QApplication::setStyle("fusion");
 #endif
-    QApplication::setApplicationVersion("Beta 3");
+    QApplication::setApplicationVersion("0.0.3");
     ImageConverter converter;
     converter.show();
     return QApplication::exec();
