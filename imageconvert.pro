@@ -3,6 +3,7 @@ QT += core gui widgets network qml quickcontrols2
 CONFIG += c++26
 
 TARGET = imageconvert
+QMAKE_TARGET_BUNDLE_PREFIX = com.selimsandal
 
 VERSION=0.0.3
 
