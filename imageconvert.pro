@@ -1,4 +1,4 @@
-QT += core gui widgets network qml quickcontrols2
+QT += core gui widgets network qml
 
 CONFIG += c++26
 
