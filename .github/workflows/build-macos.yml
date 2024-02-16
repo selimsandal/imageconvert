@@ -18,11 +18,11 @@ jobs:
       - name: Run Makefile
         run: make all
 
-      - name: Prepare deployment and create dmg with macdeployqt
+      - name: Prepare deployment and create app with macdeployqt
         run: macdeployqt build/imageconvert.app -appstore-compliant
 
       - name: Upload app as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: application-dmg-macos
+          name: application-app-macos
           path: build/*.app
