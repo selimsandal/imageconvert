@@ -17,4 +17,4 @@ SOURCES += \
 HEADERS += \
         src/DropIndicator.h
 
-ICON = xcode.icns
+ICON = icon.icns
