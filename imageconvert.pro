@@ -18,4 +18,3 @@ HEADERS += \
         src/DropIndicator.h
 
 ICON = xcode.icns
-QMAKE_INFO_PLIST = Info.plist
