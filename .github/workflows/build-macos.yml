@@ -21,7 +21,7 @@ jobs:
       - name: Prepare deployment and create dmg with macdeployqt
         run: macdeployqt build/imageconvert.app -appstore-compliant
 
-      - name: Upload dmg as artifact
+      - name: Upload app as artifact
         uses: actions/upload-artifact@v2
         with:
           name: application-dmg-macos
