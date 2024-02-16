@@ -24,7 +24,6 @@
 #include <QStyleFactory>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QQuickStyle>
 #include "DropIndicator.h"
 
 class ImageConverter : public QWidget {
