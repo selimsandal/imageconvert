@@ -21,7 +21,7 @@ jobs:
           version: 6.6.*
 
       - name: Run Makefile
-        shell: cmd
+        shell: pwsh
         run: |
           make all
 
