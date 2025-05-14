@@ -31,7 +31,7 @@ jobs:
           windeployqt build/Release/imageconvert.exe
 
       - name: Upload build directory as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: build-folder-windows
           path: build/
