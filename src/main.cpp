@@ -32,7 +32,6 @@ public:
         setAcceptDrops(true);
         QVBoxLayout *mainLayout = new QVBoxLayout(this);
         setupUI(mainLayout);
-        fetchCurrentTime();
     }
 
 protected:
@@ -184,35 +183,6 @@ private:
             if (!writer.write(image)) {
                 QMessageBox::critical(this, tr("Error"), tr("Could not write the image to: %1").arg(outputFilePath));
             }
-        }
-    }
-
-
-    void fetchCurrentTime() {
-        networkManager = new QNetworkAccessManager(this);
-        connect(networkManager, &QNetworkAccessManager::finished, this, &ImageConverter::onTimeFetched);
-        networkManager->get(QNetworkRequest(QUrl("http://worldtimeapi.org/api/ip")));
-    }
-
-    void onTimeFetched(QNetworkReply *reply) {
-        if (reply->error() == QNetworkReply::NoError) {
-            QByteArray responseBytes = reply->readAll();
-            QJsonDocument jsonDoc = QJsonDocument::fromJson(responseBytes);
-            QJsonObject jsonObj = jsonDoc.object();
-            QDateTime currentServerTime = QDateTime::fromString(jsonObj["datetime"].toString(), Qt::ISODate);
-            checkExpiration(currentServerTime);
-        } else {
-            QMessageBox::information(this, tr("License Problem"), tr("Error connecting to license server."));
-            qApp->quit();
-        }
-        reply->deleteLater();
-    }
-
-    void checkExpiration(const QDateTime &serverTime) {
-        QDateTime expirationDate(QDate(2024, 2, 28), QTime(0, 0, 0));
-        if (serverTime > expirationDate) {
-            QMessageBox::warning(this, tr("Update Required"), tr("This application has expired and requires an update. Please download the latest version."));
-            QApplication::quit();
         }
     }
 };
