@@ -22,7 +22,7 @@ jobs:
         run: macdeployqt build/imageconvert.app -appstore-compliant -dmg
 
       - name: Upload dmg as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: application-dmg-macos
           path: build/*.dmg
