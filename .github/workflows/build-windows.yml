@@ -16,7 +16,7 @@ jobs:
           arch: x64
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v3.3.0
+        uses: jurplel/install-qt-action@v4
         with:
           version: 6.6.*
 
