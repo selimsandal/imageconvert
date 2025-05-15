@@ -28,7 +28,7 @@ jobs:
       - name: Run Makefile
         shell: pwsh
         run: |
-          make all
+          nmake
 
       - name: Prepare deployment with windeployqt
         shell: cmd
