@@ -23,12 +23,7 @@ jobs:
       - name: Run Qmake
         shell: pwsh
         run: |
-          qmake CONFIG+=release
-
-      - name: Run Makefile
-        shell: pwsh
-        run: |
-          nmake
+          mkdir build; cd build; qmake ../; nmake
 
       - name: Prepare deployment with windeployqt
         shell: cmd
