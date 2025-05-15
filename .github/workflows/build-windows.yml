@@ -20,6 +20,11 @@ jobs:
         with:
           version: 6.6.*
 
+      - name: Run Qmake
+        shell: pwsh
+        run: |
+          qmake CONFIG+=release
+
       - name: Run Makefile
         shell: pwsh
         run: |
