@@ -11,18 +11,24 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v3.3.0
+        uses: jurplel/install-qt-action@v4
         with:
           version: 6.6.*
 
-      - name: Run Makefile
-        run: make all
+      - name: Run Qmake and Build
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          qmake ../
+          make
 
-      - name: Prepare deployment and create app with macdeployqt
-        run: macdeployqt build/imageconvert.app -appstore-compliant -dmg
+      - name: Prepare deployment with macdeployqt
+        run: |
+          macdeployqt build/imageconvert.app -appstore-compliant -dmg
 
-      - name: Upload dmg as artifact
+      - name: Upload build directory as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: application-dmg-macos
+          name: build-folder-macos
           path: build/*.dmg
