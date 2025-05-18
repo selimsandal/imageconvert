@@ -24,12 +24,12 @@ jobs:
       - name: Configure CMake
         shell: pwsh
         run: |
-          mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -G "Ninja"
+          mkdir cmakebuild && cd cmakebuild && cmake .. -DCMAKE_BUILD_TYPE=Release -G "Ninja"
 
       - name: Build
         shell: pwsh
         run: |
-          cmake --build build --config Release
+          cmake --build cmakebuild --config Release
 
       - name: Run windeployqt
         shell: pwsh
