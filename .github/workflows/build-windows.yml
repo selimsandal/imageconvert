@@ -41,3 +41,15 @@ jobs:
         with:
           name: build-folder-windows
           path: Build
+
+      - name: Zip the build folder
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path Build\* -DestinationPath imageconvert-windows.zip
+
+      - name: Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: imageconvert-windows.zip
