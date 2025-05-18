@@ -18,7 +18,8 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: 6.9.*
-          modules: "qtimageformats qtdeclarative"
+          modules: qtimageformats
+          archives: qtdeclarative
 
       - name: Configure CMake
         shell: pwsh
