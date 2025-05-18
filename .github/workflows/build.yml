@@ -19,7 +19,6 @@ jobs:
         with:
           version: 6.9.*
           modules: qtimageformats
-          archives: qtdeclarative
 
       - name: Configure CMake
         shell: pwsh
@@ -82,10 +81,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.9.*
+          modules: qtimageformats
+
+      - name: Install build dependencies
         run: |
           sudo apt update
-          sudo apt install -y qt6-base-dev qt6-image-formats-plugins qt6-tools-dev cmake ninja-build
+          sudo apt install -y cmake ninja-build
 
       - name: Configure CMake
         run: |
