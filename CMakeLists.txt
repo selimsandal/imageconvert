@@ -1,25 +1,29 @@
 cmake_minimum_required(VERSION 3.31)
 project(imageconvert VERSION 0.0.3 LANGUAGES CXX)
 
-# ─── Compiler settings ───────────────────────────────────────────────────────────
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# ─── Where to put the executable ────────────────────────────────────────────────
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/Build")
 
-# ─── Find Qt ────────────────────────────────────────────────────────────────────
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Qml)
 
-# ─── Sources ────────────────────────────────────────────────────────────────────
 set(SOURCES  src/main.cpp  src/DropIndicator.cpp)
 set(HEADERS  src/DropIndicator.h)
 
-# ─── Target ─────────────────────────────────────────────────────────────────────
 add_executable(imageconvert WIN32            # WIN32 hides the console on Windows
         ${SOURCES} ${HEADERS}
 )
+
+if(APPLE)
+    set_target_properties(imageconvert PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_GUI_IDENTIFIER com.selimsandal.imageconvert
+        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
+    )
+endif()
 
 target_link_libraries(imageconvert PRIVATE
         Qt6::Core
@@ -35,8 +39,6 @@ set_target_properties(imageconvert PROPERTIES
         AUTORCC ON
 )
 
-# ─── Automatic deploy step (no extra args) ──────────────────────────────────────
-# Locate the Qt bin directory via qmake
 get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
 get_filename_component(QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
 
