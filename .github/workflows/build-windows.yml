@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   push:
 
+permissions:
+  contents: write
+  discussions: write
+
 jobs:
   build:
     runs-on: windows-2022
