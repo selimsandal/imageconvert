@@ -8,22 +8,19 @@ jobs:
     runs-on: windows-2022
 
     steps:
-      # ─── 1. Checkout ───────────────────────────────────────────────────────────
       - uses: actions/checkout@v3
 
-      # ─── 2. MSVC environment ──────────────────────────────────────────────────
       - name: Set up Visual Studio shell
         uses: egor-tensin/vs-shell@v2
         with:
           arch: x64
 
-      # ─── 3. Install Qt 6.9.* ──────────────────────────────────────────────────
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
           version: 6.9.*
+          modules: qtimageformats
 
-      # ─── 4. Configure & build with CMake (Release) ────────────────────────────
       - name: Configure CMake
         shell: pwsh
         run: |
@@ -34,13 +31,11 @@ jobs:
         run: |
           cmake --build cmake_root --config Release
 
-      # ─── 5. Bundle Qt libs with windeployqt ───────────────────────────────────
       - name: Run windeployqt
         shell: pwsh
         run: |
           windeployqt cmake_root/Build/imageconvert.exe
 
-      # ─── 6. Upload build artifacts ────────────────────────────────────────────
       - name: Upload build directory as artifact
         uses: actions/upload-artifact@v4
         with:
