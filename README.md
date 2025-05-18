@@ -2,4 +2,4 @@
 Tiny Qt app that turns **any image format into any other**
 
 ### Binary Release
-You can download the (latest github action)[https://github.com/selimsandal/imageconvert/actions] artifact for the binaries
+You can download the [latest github action](https://github.com/selimsandal/imageconvert/actions) artifact for the binaries
